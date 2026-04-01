@@ -4,42 +4,45 @@ import yfinance as yf
 import matplotlib.pyplot as plt
 import sys
 import argparse
-from datetime import date
-from dateutil.relativedelta import relativedelta
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("ticker", nargs="+", help="Stock ticker(s)")
     time_range = parser.add_mutually_exclusive_group()
-    time_range.add_argument("-y", "--ytd", action="store_true", help="Time range: year-to-date (default)")
-    time_range.add_argument("-Y", "--year", action="store_true", help="Time range: one year")
-    time_range.add_argument("-w", "--week", action="store_true", help="Time range: one week")
-    time_range.add_argument("-5", "--five-year", action="store_true", help="Time range: five years")
-    time_range.add_argument("-10", "--ten-year", action="store_true", help="Time range: ten years")
+    time_range.add_argument("-y", "--ytd", action="store_true", help="Period: year-to-date (default)")
+    time_range.add_argument("-Y", "--year", action="store_true", help="Period: one year")
+    time_range.add_argument("-w", "--week", action="store_true", help="Period: one week")
+    time_range.add_argument("-m", "--month", action="store_true", help="Period: one month")
+    time_range.add_argument("-5", "--five-year", action="store_true", help="Period: five years")
+    time_range.add_argument("-10", "--ten-year", action="store_true", help="Period: ten years")
+    time_range.add_argument("-M", "--max", action="store_true", help="Period: Maximum")
     args = parser.parse_args()
 
-    today = date.today()
-    end = today.strftime("%Y-%m-%d")
-    # Default start time to be for year-to-date
-    start = today.strftime("%Y-01-01")
+    # Default period to be for year-to-date
+    period = "ytd"
 
     if args.year:
-        start = today - relativedelta(years=1)
+        period = "1y"
     elif args.week:
-        start = today - relativedelta(weeks=1)
+        period = "5d"
+    elif args.month:
+        period = "1mo"
     elif args.five_year:
-        start = today - relativedelta(years=5)
+        period = "5y"
     elif args.ten_year:
-        start = today - relativedelta(years=10)
+        period = "10y"
+    elif args.max:
+        period = "max"
 
     tickers = set([ticker.upper() for ticker in args.ticker])
     tickers_queried = []
+    plt.style.use("dark_background")
     plt.figure(figsize=(10, 5))
     plt.xlabel("Date")
     plt.ylabel("Cumulative return (%)")
 
     for ticker in tickers:
-        data = yf.download(ticker, start=start, end=end)
+        data = yf.download(ticker, period=period)
 
         if data.empty:
             print(f"Error downloading {ticker} data. Skipping...")
